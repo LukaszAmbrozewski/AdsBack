@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true, //Nie dopuszczamy żeby można było niejawnie dopuścić do any
+    "preserveConstEnums": true, //Dodajemy żeby działały enumy przełożone do JSON
+    "sourceMap": true, //pozwala nam wiedziec w którym miejscu w ts jest błąd
+    "target": "es6",  //Pozwala określić wersję ecmascript w którą celujemy
+    "downlevelIteration": true,//Pozawala na iterowanie po różnych rzeczach które są nie tylko tablicami
+    "module": "CommonJS", //Wybieramy system modułów który jest rozpoznawalny przez node
+    "lib": ["es6"],  //biblioteki z jakich korzystamy
+    "outDir": "dist",  //Gdzie będziemy robić produkcyjną JS wersję naszej aplikacji
+    "experimentalDecorators": true,  //Do korzystania z dekoratorów
+    "emitDecoratorMetadata": true, //Do korzystania z dekoratorów
+    "moduleResolution": "Node", //Dajemy informacje że moduły mają być rozwiązywane tak jak to się dzieje w node
+    "esModuleInterop": true
+  }
+}
