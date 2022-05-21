@@ -1,10 +1,10 @@
-import {AdEntity} from "../types";
+import {AdEntity, NewAdEntity} from "../types";
 import {ValidationError} from "../utils/errors";
+import {pool} from "../utils/db";
+import {FieldPacket} from "mysql2";
 
-//Tworzymy sobie taki sam interfejs z jedną zmianą id bo nie będzie ono wymagane przy tworzeniu (stworzymy sami automatycznie)
-interface NewAdEntity extends Omit<AdEntity, 'id'> {
-    id?: string;
-}
+//Tworzymy lokalnie typ który otypuje zwracany przez nas pojedynczy rekord z bazy danych
+type AdRecordResults = [AdEntity[], FieldPacket[]];
 
 export class AdRecord implements AdEntity {
     public id: string;
@@ -14,7 +14,6 @@ export class AdRecord implements AdEntity {
     public url: string;
     public lat: number;
     public lon: number;
-
     constructor(obj: NewAdEntity) {
         //walidacja
         if (!obj.name || obj.name.length > 100) {
@@ -40,11 +39,21 @@ export class AdRecord implements AdEntity {
         }
 
         //jeżeli się wszystko zgadza to przypisujemy
+        this.id = obj.id;
         this.name = obj.name;
         this.description = obj.description;
         this.price = obj.price;
         this.url = obj.url;
         this.lat = obj.lat;
         this.lon = obj.lon;
+    }
+
+    //Funkcja zwracająca pojedynczy rekord
+    static async getOne(id: string): Promise<AdRecord | null> {
+        const [result] = await pool.execute("SELECT * FROM `ads` WHERE id=:id", {
+            id: id,
+        }) as AdRecordResults;
+
+        return result.length === 0 ? null : new AdRecord(result[0]);
     }
 }
