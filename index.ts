@@ -3,6 +3,7 @@ import cors from 'cors';
 import 'express-async-errors';
 import {handleError} from "./utils/errors";
 import rateLimit from 'express-rate-limit';
+import {AdRouter} from "./routers/ad.router";
 
 const app = express();
 
@@ -17,11 +18,7 @@ app.use(rateLimit({
     }  //To nam daje max 100 zapytań na 5 minut
 ));
 
-// Routes..
-
-// app.get('/', async (req, res) => {
-//    throw new ValidationError('Daamn!')
-// });
+app.use('/ad/', AdRouter);
 
 app.use(handleError);
 
