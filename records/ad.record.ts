@@ -1,4 +1,4 @@
-import {AdEntity, NewAdEntity} from "../types";
+import {AdEntity, NewAdEntity, SimpleAdEntity} from "../types";
 import {ValidationError} from "../utils/errors";
 import {pool} from "../utils/db";
 import {FieldPacket} from "mysql2";
@@ -55,5 +55,21 @@ export class AdRecord implements AdEntity {
         }) as AdRecordResults;
 
         return result.length === 0 ? null : new AdRecord(result[0]);
+    }
+
+    //Funkcja ta zwraca wszystkie ogłoszenia ale w okrojonej wersji dając tylko id oraz położenie (WZGLĘDY BEZPIECZEŃSTWA). Do tego korzystamy z przygotowanego innego interfejsu oraz mapujemy i zwracamy tylko to co chcemy zwrócić użytkownikowi.
+    static async findAll(name: string): Promise<SimpleAdEntity[]> {
+        const [result] = await pool.execute("SELECT * FROM `ads` WHERE `name` LIKE :search", {
+            search: `%${name}%`,
+        }) as AdRecordResults;
+
+        return result.map(result => {
+            const {
+                id, lat, lon,
+            } = result;
+            return {
+                id, lat, lon,
+            }
+        });
     }
 }
