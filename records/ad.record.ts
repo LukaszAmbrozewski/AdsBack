@@ -1,10 +1,11 @@
-import {AdEntity} from "../types";
+import {AdEntity, NewAdEntity, SimpleAdEntity} from "../types";
 import {ValidationError} from "../utils/errors";
+import {pool} from "../utils/db";
+import {FieldPacket} from "mysql2";
+import {v4 as uuid} from 'uuid';
 
-//Tworzymy sobie taki sam interfejs z jedną zmianą id bo nie będzie ono wymagane przy tworzeniu (stworzymy sami automatycznie)
-interface NewAdEntity extends Omit<AdEntity, 'id'> {
-    id?: string;
-}
+//Tworzymy lokalnie typ który otypuje zwracany przez nas pojedynczy rekord z bazy danych
+type AdRecordResults = [AdEntity[], FieldPacket[]];
 
 export class AdRecord implements AdEntity {
     public id: string;
@@ -14,7 +15,6 @@ export class AdRecord implements AdEntity {
     public url: string;
     public lat: number;
     public lon: number;
-
     constructor(obj: NewAdEntity) {
         //walidacja
         if (!obj.name || obj.name.length > 100) {
@@ -40,11 +40,47 @@ export class AdRecord implements AdEntity {
         }
 
         //jeżeli się wszystko zgadza to przypisujemy
+        this.id = obj.id;
         this.name = obj.name;
         this.description = obj.description;
         this.price = obj.price;
         this.url = obj.url;
         this.lat = obj.lat;
         this.lon = obj.lon;
+    }
+    //Funkcja zwracająca pojedynczy rekord
+
+    static async getOne(id: string): Promise<AdRecord | null> {
+        const [result] = await pool.execute("SELECT * FROM `ads` WHERE id=:id", {
+            id: id,
+        }) as AdRecordResults;
+
+        return result.length === 0 ? null : new AdRecord(result[0]);
+    }
+    //Funkcja ta zwraca wszystkie ogłoszenia ale w okrojonej wersji dając tylko id oraz położenie (WZGLĘDY BEZPIECZEŃSTWA). Do tego korzystamy z przygotowanego innego interfejsu oraz mapujemy i zwracamy tylko to co chcemy zwrócić użytkownikowi.
+
+    static async findAll(name: string): Promise<SimpleAdEntity[]> {
+        const [result] = await pool.execute("SELECT * FROM `ads` WHERE `name` LIKE :search", {
+            search: `%${name}%`,
+        }) as AdRecordResults;
+
+        return result.map(result => {
+            const {
+                id, lat, lon,
+            } = result;
+            return {
+                id, lat, lon,
+            }
+        });
+    }
+
+    async insert(): Promise<void> {
+        if (!this.id) {
+            this.id = uuid();
+        } else {
+            throw new Error('Cannot insert something that is already inserted!');
+        }
+
+        await pool.execute("INSERT INTO `ads` (`id`, `name`, `description`, `price`, `url`, `lat`, `lon`) VALUES(:id, :name, :description, :price, :url, :lat, :lon)", this);
     }
 }
