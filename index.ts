@@ -1,4 +1,4 @@
-import express, { json } from "express";
+import express, {json, Router} from "express";
 import cors from 'cors';
 import 'express-async-errors';
 import {handleError} from "./utils/errors";
@@ -18,7 +18,11 @@ app.use(rateLimit({
     }  //To nam daje max 100 zapytań na 5 minut
 ));
 
-app.use('/ad/', AdRouter);
+const router = Router();
+
+router.use('/ad/', AdRouter);
+
+app.use('/api', router);
 
 app.use(handleError);
 
